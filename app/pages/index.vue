@@ -12,6 +12,7 @@ useHead({
 })
 
 const { data: rawProducts, status, error, refresh } = await useFetch<ApiProduct[]>(PRODUCTS_API_URL, {
+  server: false,
   default: () => [],
 })
 

@@ -33,6 +33,7 @@ export interface Product {
   description: string
   image: string
   categoryId: string
+  categoryLabel: string
   count: number
   rating: number
 }
@@ -53,6 +54,10 @@ const categoryLabels: Record<string, string> = {
   electronics: 'الکترونیک',
 }
 
+export function formatCategoryLabel(category: string): string {
+  return categoryLabels[category] ?? category
+}
+
 export function normalizeProduct(item: ApiProduct): Product {
   return {
     id: String(item.id),
@@ -61,6 +66,7 @@ export function normalizeProduct(item: ApiProduct): Product {
     description: item.description,
     image: item.image,
     categoryId: item.category,
+    categoryLabel: formatCategoryLabel(item.category),
     count: item.rating?.count ?? 0,
     rating: item.rating?.rate ?? 0,
   }
@@ -75,7 +81,7 @@ export function buildCategories(products: Product[]): CategoryOption[] {
 
   return Array.from(counts, ([id, count]) => ({
     id,
-    label: categoryLabels[id] ?? id,
+    label: formatCategoryLabel(id),
     count,
   }))
 }
