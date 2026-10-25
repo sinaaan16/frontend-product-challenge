@@ -1,9 +1,17 @@
 <script setup lang="ts">
-import { categories, sortOptions, type SortOptionId } from "~/data/products";
+import {
+  sortOptions,
+  type CategoryOption,
+  type SortOptionId,
+} from "~/data/products";
+
+defineProps<{
+  categories: CategoryOption[];
+}>();
 
 const query = defineModel<string>("query", { required: true });
 const sort = defineModel<SortOptionId | null>("sort", { required: true });
-const selectedCategories = defineModel<string[]>("categories", {
+const selectedCategories = defineModel<string[]>("selectedCategories", {
   required: true,
 });
 
@@ -141,7 +149,6 @@ defineExpose({ focusSearch });
           />
           <span class="box" />
           <span>{{ category.label }}</span>
-          <!-- This span end line for category.label -->
           <span
             class="count"
             :class="{ 'is-active': selectedCategories.includes(category.id) }"

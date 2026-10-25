@@ -1,5 +1,3 @@
-import windowImage from '~/assets/img/window.svg'
-
 export type SortOptionId = 'count-asc' | 'count-desc' | 'rating-desc' | 'rating-asc'
 
 export interface SortOption {
@@ -15,16 +13,31 @@ export interface CategoryOption {
   count: number
 }
 
+export interface ApiProduct {
+  id: number
+  title: string
+  price: number
+  description: string
+  category: string
+  image: string
+  rating?: {
+    rate: number
+    count: number
+  }
+}
+
 export interface Product {
   id: string
   title: string
-  summary: string
+  price: number
   description: string
   image: string
   categoryId: string
   count: number
   rating: number
 }
+
+export const PRODUCTS_API_URL = 'https://fakestoreapi.com/products'
 
 export const sortOptions: SortOption[] = [
   { id: 'count-asc', label: 'تعداد: کم به زیاد', chip: 'تعداد', direction: 'asc' },
@@ -33,25 +46,36 @@ export const sortOptions: SortOption[] = [
   { id: 'rating-asc', label: 'رتبه: کم به زیاد', chip: 'رتبه', direction: 'asc' },
 ]
 
-export const categories: CategoryOption[] = [
-  { id: 'housing', label: 'مسکن و ساختمان', count: 13 },
-  { id: 'health', label: 'بهداشت و درمان', count: 23 },
-  { id: 'industry', label: 'صنعتی و کارخانه', count: 4 },
-]
+const categoryLabels: Record<string, string> = {
+  "men's clothing": 'پوشاک مردانه',
+  "women's clothing": 'پوشاک زنانه',
+  jewelery: 'جواهرات',
+  electronics: 'الکترونیک',
+}
 
-const title = 'درب اتوماتیک بازویی Face مدل SW2'
+export function normalizeProduct(item: ApiProduct): Product {
+  return {
+    id: String(item.id),
+    title: item.title,
+    price: item.price,
+    description: item.description,
+    image: item.image,
+    categoryId: item.category,
+    count: item.rating?.count ?? 0,
+    rating: item.rating?.rate ?? 0,
+  }
+}
 
-export const products: Product[] = Array.from({ length: 12 }, (_, index) => ({
-  id: String(index + 1),
-  title,
-  summary: title,
-  description: 'جزئیات این محصول پس از اتصال به سرویس، از همین صفحه نمایش داده می‌شود.',
-  image: windowImage,
-  categoryId: 'housing',
-  count: index + 1,
-  rating: 5 - (index % 4),
-}))
+export function buildCategories(products: Product[]): CategoryOption[] {
+  const counts = new Map<string, number>()
 
-export function findProduct(id: string) {
-  return products.find(product => product.id === id)
+  for (const product of products) {
+    counts.set(product.categoryId, (counts.get(product.categoryId) ?? 0) + 1)
+  }
+
+  return Array.from(counts, ([id, count]) => ({
+    id,
+    label: categoryLabels[id] ?? id,
+    count,
+  }))
 }

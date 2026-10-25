@@ -1,20 +1,42 @@
 <script setup lang="ts">
-import { products, type SortOptionId } from '~/data/products'
+import {
+  PRODUCTS_API_URL,
+  buildCategories,
+  normalizeProduct,
+  type ApiProduct,
+  type SortOptionId,
+} from '~/data/products'
 
 useHead({
   title: 'لیست محصولات',
 })
+
+const { data: rawProducts, status, error, refresh } = await useFetch<ApiProduct[]>(PRODUCTS_API_URL, {
+  default: () => [],
+})
+
+const products = computed(() => rawProducts.value.map(normalizeProduct))
+const categories = computed(() => buildCategories(products.value))
 
 const filters = ref<{ focusSearch: () => void } | null>(null)
 const filtersOpen = ref(false)
 const draftQuery = ref('')
 const appliedQuery = ref('')
 const sort = ref<SortOptionId | null>('count-asc')
-const selectedCategories = ref<string[]>(['housing'])
+const selectedCategories = ref<string[]>([])
 
 const visibleProducts = computed(() => {
   const selected = selectedCategories.value
-  const list = products.filter(product => selected.length === 0 || selected.includes(product.categoryId))
+  const needle = appliedQuery.value.trim().toLowerCase()
+
+  const list = products.value.filter((product) => {
+    const matchesCategory = selected.length === 0 || selected.includes(product.categoryId)
+    const matchesQuery = !needle
+      || product.title.toLowerCase().includes(needle)
+      || product.description.toLowerCase().includes(needle)
+
+    return matchesCategory && matchesQuery
+  })
 
   return [...list].sort((a, b) => {
     if (sort.value === 'count-desc') return b.count - a.count
@@ -59,7 +81,8 @@ function clearFilters() {
         ref="filters"
         v-model:query="draftQuery"
         v-model:sort="sort"
-        v-model:categories="selectedCategories"
+        v-model:selected-categories="selectedCategories"
+        :categories="categories"
         @search="search"
       />
     </aside>
@@ -73,7 +96,17 @@ function clearFilters() {
         @focus-search="filters?.focusSearch()"
       />
 
-      <ul v-if="visibleProducts.length" class="catalog__grid">
+      <div v-if="error" class="catalog__empty">
+        <h2>خطا در دریافت محصولات</h2>
+        <p>ارتباط با سرویس برقرار نشد. دوباره تلاش کنید.</p>
+        <button type="button" @click="refresh()">تلاش مجدد</button>
+      </div>
+
+      <p v-else-if="status === 'pending' && !products.length" class="catalog__status">
+        در حال دریافت محصولات...
+      </p>
+
+      <ul v-else-if="visibleProducts.length" class="catalog__grid">
         <li v-for="product in visibleProducts" :key="product.id">
           <ProductCard :product="product" />
         </li>
@@ -137,6 +170,7 @@ function clearFilters() {
   list-style: none;
 }
 
+.catalog__status,
 .catalog__empty {
   display: flex;
   flex-direction: column;
@@ -147,6 +181,11 @@ function clearFilters() {
   border-radius: 22px;
   background: var(--color-surface);
   text-align: center;
+}
+
+.catalog__status {
+  color: #7d879c;
+  font-size: 14px;
 }
 
 .empty__mark {

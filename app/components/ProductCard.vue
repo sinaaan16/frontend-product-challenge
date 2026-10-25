@@ -1,19 +1,26 @@
 <script setup lang="ts">
-import type { Product } from '~/data/products'
+import type { Product } from "~/data/products";
 
 defineProps<{
-  product: Product
-}>()
+  product: Product;
+}>();
 </script>
 
 <template>
   <article class="card">
-    <img class="card__image" :src="product.image" alt="">
+    <img class="card__image" :src="product.image" :alt="product.title" loading="lazy" />
     <h2 class="card__title">{{ product.title }}</h2>
     <NuxtLink class="card__action" :to="`/products/${product.id}`">
       <span>مشاهده جزئیات</span>
       <svg viewBox="0 0 16 16" aria-hidden="true">
-        <path d="M10 3.5 5.5 8 10 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+        <path
+          d="M10 3.5 5.5 8 10 12.5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
       </svg>
     </NuxtLink>
   </article>
@@ -34,9 +41,10 @@ defineProps<{
 .card__image {
   width: 100%;
   aspect-ratio: 4 / 3;
-  object-fit: cover;
+  padding: 14px;
+  object-fit: contain;
   border-radius: 16px;
-  background: #e7eef6;
+  background: #f6f8fd;
 }
 
 .card__title {
